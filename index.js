@@ -106,12 +106,6 @@ const textSvgStr = async (
   const offsetX = imgW * (xCoord / 100);
   const offsetY = imgH * (yCoord / 100);
 
-  let textWidth = text.length * font_size * 0.6;
-  let textHeight = font_size;
-
-  let centerX = offsetX + textWidth / 2;
-  let centerY = offsetY + textHeight / 2;
-
   let textSvgString = `<svg width="${imgW}" height="${imgH}">
     <style>
       .heavy { font-weight: bold; font-size: ${font_size}px; font-family: '${text_font}', sans-serif; fill: ${text_color}; }
