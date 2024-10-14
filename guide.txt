@@ -1,0 +1,10 @@
+The following arguments can be passed while calling the API :-
+
+1.  image: Path to the image on which text is to be written.
+2.  text: The text to be written onto the image.
+3.  image_type: Aspect ratio of the resultant image. square, landscape or portrait(default)
+4.  text_font: Font of the text to be written. Font must be a system font (downloaded in the system)
+5.  text_color: Color of the text. If hex code, format is "#xxxxxx". If rgb or hsl, format is "rgb(000, 000, 000)".
+6.  font_size: Font size of the text in pixels(px).
+7.  text_position: Two values, both in percentages. First is distance from left edge of the image (x value), second is distance from top edge of the image (y value).
+8.  text_orientation: Direction of text. Values: left_to_right(default), right_to_left, bottom_left_to_top_right, top_left_to_bottom_right, bottom_right_to_top_left, top_right_to_bottom_left.

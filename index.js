@@ -30,79 +30,6 @@ async function removeBg(base64image) {
   }
 }
 
-// Function to calculate average luminance
-const calculateLuminance = async (imageBuffer, textPosition, width, height) => {
-  const { data, info } = await sharp(imageBuffer)
-    .extract({
-      left: Math.round(textPosition.x),
-      top: Math.round(textPosition.y),
-      width: Math.round(width),
-      height: Math.round(height),
-    }) // Extract the region where text will go
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  let totalLuminance = 0;
-
-  // Iterate through the image data (R, G, B values)
-  for (let i = 0; i < data.length; i += 3) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-
-    // Calculate luminance
-    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    totalLuminance += luminance;
-  }
-
-  // Average luminance
-  const avgLuminance = totalLuminance / (info.width * info.height);
-
-  // Return luminance
-  return avgLuminance;
-};
-
-// Example usage
-const determineTextColor = async (imageBuffer, textPosition, width, height) => {
-  const avgLuminance = await calculateLuminance(
-    imageBuffer,
-    textPosition,
-    width,
-    height
-  );
-
-  // Set a threshold for determining light/dark background
-  const threshold = 128; // You can tweak this value based on your needs
-
-  // If the average luminance is below the threshold, set text color to white, else black
-  const textColor = avgLuminance < threshold ? "white" : "black";
-
-  return textColor;
-};
-
-async function fetchGoogleFont(text_font) {
-  const googleFontUrl = `https://fonts.googleapis.com/css2?family=${text_font.replace(
-    /\s/g,
-    "+"
-  )}:wght@700&display=swap`;
-
-  try {
-    const response = await axios.get(googleFontUrl);
-    return response.data; // Returns the CSS with @font-face declarations
-  } catch (error) {
-    console.error("Error fetching Google Font:", error);
-    return null;
-  }
-}
-
-function extractFontUrlFromCSS(googleFontCSS) {
-  const fontUrlMatch = googleFontCSS.match(/url\((https:\/\/[^)]+)\)/);
-  if (fontUrlMatch) {
-    return fontUrlMatch[1]; // Extract the first matched URL
-  }
-  return null;
-}
-
 const textSvgStr = async (
   text,
   imgW,
@@ -135,6 +62,9 @@ const textSvgStr = async (
       break;
     case "bottom_right_to_top_left":
       rotateAngle = -135;
+      break;
+    case "right_to_left":
+      rotateAngle = 180;
       break;
     default:
       rotateAngle = 0; // No rotation
@@ -173,23 +103,21 @@ const textSvgStr = async (
   const lineHeight = font_size * 1.2; // Adjust line height
   // const startY = imgH * 0.01; // Starting Y position
 
-  let textSvgString;
+  const offsetX = imgW * (xCoord / 100);
+  const offsetY = imgH * (yCoord / 100);
 
-  // if (!text_orientation) {
-  //   textSvgString = `<svg width="${imgW}" height="${imgH}">
-  //   <style>
-  //     .heavy { font-weight: bold; font-size: ${font_size}px; font-family: '${text_font}', sans-serif; fill: ${text_color}; }
-  //   </style>
-  //   <text x="${xCoord}%" y="${yCoord}%" text-anchor="start" dominant-baseline="hanging">
-  // `;
-  // } else {
-  textSvgString = `<svg width="${imgW}" height="${imgH}">
+  let textWidth = text.length * font_size * 0.6;
+  let textHeight = font_size;
+
+  let centerX = offsetX + textWidth / 2;
+  let centerY = offsetY + textHeight / 2;
+
+  let textSvgString = `<svg width="${imgW}" height="${imgH}">
     <style>
       .heavy { font-weight: bold; font-size: ${font_size}px; font-family: '${text_font}', sans-serif; fill: ${text_color}; }
     </style>
-    <text x="${xCoord}%" y="${yCoord}%" text-anchor="start" dominant-baseline="hanging" transform="rotate(${rotateAngle}, ${xPixel}, ${yPixel})">
+    <text x="${offsetX}" y="${offsetY}" text-anchor="start" dominant-baseline="hanging" transform="rotate(${rotateAngle}, ${offsetX}, ${offsetY})">
   `;
-  // }
 
   lines.forEach((line, index) => {
     if (autoFS === 1) {
@@ -201,11 +129,13 @@ const textSvgStr = async (
         estimatedWidth = line.length * (adjustedFontSize * 0.6);
       }
 
-      textSvgString += `<tspan x="${xCoord}%" dy="${
+      // let adjustedY = (imgH * (yCoord/100)) + (index * adjustedFontSize * 1.5);
+
+      textSvgString += `<tspan x="${offsetX}" dy="${
         adjustedFontSize * 1
       }" style="font-size:${adjustedFontSize}px" class="heavy">${line}</tspan>`;
     } else {
-      textSvgString += `<tspan x="${xCoord}%" dy="${
+      textSvgString += `<tspan x="${offsetX}" dy="${
         font_size * 1
       }" style="font-size:${font_size}px" class="heavy">${line}</tspan>`;
     }
